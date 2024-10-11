@@ -1,11 +1,12 @@
-
+type AnyObject = Record<string | number | symbol, any>
 export interface BaseResponse<T>{
   status: number;
   statusText:string;
+  header?: AnyObject;
   data:T;
 }
 
-export interface ErrorResponse {
+export interface ErrorResp {
   code: number;
   message: string;
   data: [];

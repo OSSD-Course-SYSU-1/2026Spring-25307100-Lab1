@@ -1,14 +1,18 @@
 import Request, { HttpRequestConfig, HttpResponse } from '@yyz116/h_request'
 import { Log } from './logutil';
+const $u = {
+  http: new Request(),
+}
+//挂载在ArkTS引擎实例内部的一个全局对象globalThis中，供全局使用
+globalThis.$http = $u.http;
 
 export const setRequestConfig = () => {
-  const httpRequest = new Request();
-  httpRequest.setConfig((config:HttpRequestConfig) => {
+  globalThis.$http.setConfig((config:HttpRequestConfig) => {
     config.baseURL = "http://175.178.126.10:8000/api/v1";
     return config;
   });
   // 请求拦截
-  httpRequest.interceptors.request.use(
+  globalThis.$http.interceptors.request.use(
     (config) => {
       Log.debug('请求拦截')
       return config
@@ -18,7 +22,7 @@ export const setRequestConfig = () => {
     }
   )
   // 响应拦截
-  httpRequest.interceptors.response.use(
+  globalThis.$http.interceptors.response.use(
     (response:HttpResponse) => {
       Log.debug('响应拦截')
       if (response.data.code == 401) {
@@ -34,6 +38,4 @@ export const setRequestConfig = () => {
       return Promise.reject(error)
     }
   )
-  //挂载在ArkTS引擎实例内部的一个全局对象globalThis中，供全局使用
-  globalThis.$http = httpRequest;
 }
