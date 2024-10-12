@@ -1,11 +1,13 @@
-import {getSwiperList,getHotMovie} from "../common/api/home"
-import { hilog } from '@kit.PerformanceAnalysisKit';
-import { BaseResponse,ErrorResp } from '../common/bean/ApiTypes';
+import Home from "../pages/home/Home"
+import ZhiHu from "../pages/zhihu/Zhihu"
+import Mine from "../pages/mine/Mine"
 
 @Entry
 @Component
 struct Index {
-  @State message: string = 'Hello World';
+  @State currentIndex: number = 0
+  private controller: TabsController = new TabsController()
+
   // 只有被@Entry装饰的组件才可以调用页面的生命周期
   onPageShow() {
     console.info('Index onPageShow');
@@ -20,52 +22,43 @@ struct Index {
     console.info('Index onBackPress');
   }
 
-  // 组件生命周期
-  aboutToAppear() {
-    console.info('MyComponent aboutToAppear');
-  }
-
-  // 组件生命周期
-  aboutToDisappear() {
-    console.info('MyComponent aboutToDisappear');
-  }
-
   build() {
-    Row() {
-      Column() {
-        Text(this.message)
-          .id('HelloWorld')
-          .fontSize(50)
-          .fontWeight(FontWeight.Bold)
+    Column() {
+      Tabs({
+        barPosition: BarPosition.End,
+        controller: this.controller
+      }) {
+        TabContent() {
+          Home()
+        }.tabBar(this.TabBuilder('首页', 0, $r('app.media.icon_sort'), $r('app.media.icon_sort_default')))
 
-        Button('test')
-          .onClick(() => {
-            console.info('button click');
-            getSwiperList().then((res) => {
-              hilog.debug(0x0000,"request",res.data.message)
-              hilog.debug(0x0000,"request","res.data.code:%{public}d",res.data.code)
-              hilog.debug(0x0000,"request","res.data.data[0]:%{public}s",res.data.data[0].id)
-              hilog.debug(0x0000,"request","res.data.data[0]:%{public}s",res.data.data[0].imageUrl)
-              hilog.debug(0x0000,"request","res.data.data[0]:%{public}s",res.data.data[0].title)
-            }).catch((err:BaseResponse<ErrorResp>) => {
-              hilog.debug(0x0000,"request","err.data.code:%d",err.data.code)
-              hilog.debug(0x0000,"request",err.data.message)
-            });
+        TabContent() {
+          ZhiHu()
+        }.tabBar(this.TabBuilder('日报', 1, $r('app.media.search_select'), $r('app.media.search_defaut')))
 
-            getHotMovie({start:0,count:1,city:"郑州"}).then((res) => {
-              hilog.debug(0x0000,"request",res.data.message)
-              hilog.debug(0x0000,"request","res.data.code:%{public}d",res.data.code)
-              hilog.debug(0x0000,"request","res.data.data[0]:%{public}s",res.data.data[0].id)
-              hilog.debug(0x0000,"request","res.data.data[0]:%{public}s",res.data.data[0].gener)
-              hilog.debug(0x0000,"request","res.data.data[0]:%{public}s",res.data.data[0].title)
-            }).catch((err:BaseResponse<ErrorResp>) => {
-              hilog.debug(0x0000,"request","err.data.code:%d",err.data.code)
-              hilog.debug(0x0000,"request",err.data.message)
-            });
-          })
-      }
-      .height('100%')
-      .width('100%')
+        TabContent() {
+           Mine()
+        }.tabBar(this.TabBuilder('我的', 2, $r('app.media.user_selected'), $r('app.media.user')))
+      }.scrollable(false) // 禁止滑动切换
     }
+    .width('100%')
+    .height('100%')
+  }
+
+  // 自定义导航页签的样式
+  @Builder TabBuilder(title: string, targetIndex: number, selectedImg: Resource, normalImg: Resource) {
+    Column() {
+      Image(this.currentIndex === targetIndex ? selectedImg : normalImg)
+        .size({ width: 25, height: 25 })
+      Text(title)
+        .fontColor(this.currentIndex === targetIndex ? '#28bff1' : '#8a8a8a')
+    }
+    .width('100%')
+    .height(50)
+    .justifyContent(FlexAlign.Center)
+    .onClick(() => {
+      this.currentIndex = targetIndex
+      this.controller.changeIndex(this.currentIndex)
+    })
   }
 }
