@@ -97,10 +97,13 @@ export default struct ZhiHu{
           .zIndex(1)
 
           // 显示轮播图标题
-          Text("标题")
-            .margin({ top:80 })
+          Text("标题aaaaaaaaaaaaaaaaaa啊啊啊啊啊啊啊啊")
+            .padding(5)
+            .margin({ top:60 })
             .width('100%').height(50)
             .textAlign(TextAlign.Center)
+            .maxLines(2)
+            .textOverflow({overflow:TextOverflow.Clip})
             .fontSize(20)
             .fontColor(Color.White)
             .opacity(100) // 设置标题的透明度 不透明度设为100%，表示完全不透明
