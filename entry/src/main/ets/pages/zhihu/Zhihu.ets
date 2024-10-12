@@ -67,40 +67,47 @@ export default struct ZhiHu{
           .fontSize("18fp")
 
         // 内容项
-        Swiper(this.swiperController) {
-          LazyForEach(this.data, (item: string) => {
-            Text(item.toString())
-              .width('100%')
-              .height(160)
-              .backgroundColor(0xAFEEEE)
-              .textAlign(TextAlign.Center)
-              .fontSize(30)
-          }, (item: string) => item)
-        }
-        .cachedCount(2)
-        .index(1)
-        .autoPlay(true)
-        .interval(4000)
-        .loop(true)
-        .indicatorInteractive(true)
-        .duration(1000)
-        .itemSpace(0)
-        .displayArrow({ // 设置导航点箭头样式
-          showBackground: true,
-          isSidebarMiddle: true,
-          backgroundSize: 24,
-          backgroundColor: Color.White,
-          arrowSize: 18,
-          arrowColor: Color.Blue
-        }, false)
-        .curve(Curve.Linear)
-        .onChange((index: number) => {
-          console.info(index.toString())
-        })
-        .onGestureSwipe((index: number, extraInfo: SwiperAnimationEvent) => {
-          console.info("index: " + index)
-          console.info("current offset: " + extraInfo.currentOffset)
-        })
+        Stack({ alignContent: Alignment.Center }) {
+          Swiper(this.swiperController) {
+            LazyForEach(this.data, (item: string) => {
+              Text(item.toString())
+                .width('100%')
+                .height(160)
+                .backgroundColor(0xAFEEEE)
+                .textAlign(TextAlign.Center)
+                .fontSize(30)
+            }, (item: string) => item)
+          }
+          .cachedCount(2)
+          .index(1)
+          .autoPlay(true)
+          .interval(4000)
+          .loop(true)
+          .indicatorInteractive(true)
+          .duration(1000)
+          .itemSpace(0)
+          .curve(Curve.Linear)
+          .onChange((index: number) => {
+            console.info(index.toString())
+          })
+          .onGestureSwipe((index: number, extraInfo: SwiperAnimationEvent) => {
+            console.info("index: " + index)
+            console.info("current offset: " + extraInfo.currentOffset)
+          })
+          .zIndex(1)
+
+          // 显示轮播图标题
+          Text("标题")
+            .margin({ top:80 })
+            .width('100%').height(50)
+            .textAlign(TextAlign.Center)
+            .fontSize(20)
+            .fontColor(Color.White)
+            .opacity(100) // 设置标题的透明度 不透明度设为100%，表示完全不透明
+            .backgroundColor('#808080AA') // 背景颜色设为透明
+            .zIndex(2)
+
+        }.height(160) // 设置标题的高度
 
       }.size({ width: '100%', height: '100%' })
     }
