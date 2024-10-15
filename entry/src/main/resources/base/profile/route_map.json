@@ -1,0 +1,12 @@
+{
+  "routerMap": [
+    {
+      "name": "PageOne",
+      "pageSourceFile": "src/main/ets/pages/zhihu/detail/Detail.ets",
+      "buildFunction": "DetailPageBuilder",
+      "data": {
+        "description" : "this is Page Detail"
+      }
+    }
+  ]
+}
