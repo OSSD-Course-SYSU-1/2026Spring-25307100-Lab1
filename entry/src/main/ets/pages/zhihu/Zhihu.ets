@@ -61,19 +61,50 @@ export default struct ZhiHu{
     Navigation(this.pageStack){
       Row() {
         Column({ space: 0 }) {
+          // 标题栏
+          Text("日报")
+            .size({ width: '100%', height: 50 })
+            .backgroundColor("#28bff1")
+            .fontColor("#ffffff")
+            .textAlign(TextAlign.Center)
+            .fontSize("18fp")
+
           // 内容项
-          Stack({ alignContent: Alignment.Center }) {
             Swiper(this.swiperController) {
               LazyForEach(this.data, (item: string) => {
-                Text(item.toString())
-                  .width('100%')
-                  .height(160)
-                  .backgroundColor(0xAFEEEE)
-                  .textAlign(TextAlign.Center)
-                  .fontSize(30)
-                  .onClick(()=>{
-                    this.pageStack.pushPathByName("PageOne",item)
-                  })
+                Stack({ alignContent: Alignment.Center }) {
+                  Text(item.toString())
+                    .width('100%')
+                    .height(160)
+                    .backgroundColor(0xAFEEEE)
+                    .textAlign(TextAlign.Center)
+                    .fontSize(30)
+                    .zIndex(1)
+                    .onClick(() => {
+                      //this.pageStack.pushPathByName("PageOne", item)
+                      this.pageStack.pushDestinationByName("PageOne", item).catch((e:Error)=>{
+                        // 跳转失败，会返回错误码及错误信息
+                        console.log(`catch exception: ${JSON.stringify(e)}`)
+                      }).then(()=>{
+                        // 跳转成功
+                      });
+                    })
+
+                  // 显示轮播图标题
+                  Text("标题aaaaaaaaaaaaaaaaaa啊啊啊啊啊啊啊啊")
+                    .padding(5)
+                    .margin({ top:60 })
+                    .width('100%').height(50)
+                    .textAlign(TextAlign.Center)
+                    .maxLines(2)
+                    .textOverflow({overflow:TextOverflow.Clip})
+                    .fontSize(20)
+                    .fontColor(Color.White)
+                    .opacity(100) // 设置标题的透明度 不透明度设为100%，表示完全不透明
+                    .backgroundColor('#808080AA') // 背景颜色设为透明
+                    .zIndex(2)
+
+                }
               }, (item: string) => item)
             }
             .cachedCount(2)
@@ -92,29 +123,11 @@ export default struct ZhiHu{
               console.info("index: " + index)
               console.info("current offset: " + extraInfo.currentOffset)
             })
-            .zIndex(1)
-
-            // 显示轮播图标题
-            Text("标题aaaaaaaaaaaaaaaaaa啊啊啊啊啊啊啊啊")
-              .padding(5)
-              .margin({ top:60 })
-              .width('100%').height(50)
-              .textAlign(TextAlign.Center)
-              .maxLines(2)
-              .textOverflow({overflow:TextOverflow.Clip})
-              .fontSize(20)
-              .fontColor(Color.White)
-              .opacity(100) // 设置标题的透明度 不透明度设为100%，表示完全不透明
-              .backgroundColor('#808080AA') // 背景颜色设为透明
-              .zIndex(2)
-
-          }.height(160) // 设置标题的高度
+            .height(160) // 设置高度
 
         }.size({ width: '100%', height: '100%' })
       }
     }
-    .title('日报')
-    .titleMode(NavigationTitleMode.Mini)
     .mode(NavigationMode.Stack)
     .width('100%').height('100%')
 
