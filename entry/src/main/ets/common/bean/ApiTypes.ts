@@ -49,3 +49,20 @@ export interface MovieRespData {
   total: number;
   title: string;
 }
+
+//==============================知乎日报
+interface ZhiNewsItem{
+  id:string;
+  image:string;
+  title:string;
+  url:string;
+  hint:string;
+  date: string;
+}
+export interface ZhiNewsRespData {
+  code: number;
+  message: string;
+  stories: Array<ZhiNewsItem>;
+  top_stories: Array<ZhiNewsItem>;
+  date: string;
+}
