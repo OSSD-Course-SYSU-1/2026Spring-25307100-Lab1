@@ -51,7 +51,7 @@ export interface MovieRespData {
 }
 
 //==============================知乎日报
-interface ZhiNewsItem{
+type ZhiNewsItem ={
   id:string;
   image:string;
   title:string;
@@ -65,4 +65,21 @@ export interface ZhiNewsRespData {
   stories: Array<ZhiNewsItem>;
   top_stories: Array<ZhiNewsItem>;
   date: string;
+}
+
+type ZhiDetailItem={
+  types:string;
+  value:string;
+}
+export interface ZhiDetailRespData {
+  code: number;
+  message: string;
+  content: Array<ZhiDetailItem>;
+  title: string;
+  author: string;
+  bio: string;
+  avatar: string;
+  image: string;
+  more: string;
+
 }

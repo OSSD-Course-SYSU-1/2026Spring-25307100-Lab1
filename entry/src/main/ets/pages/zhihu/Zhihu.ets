@@ -1,4 +1,5 @@
 import {getSwiperList,getHotMovie} from "../../common/api/home"
+import { getZhiHuNews } from '../../common/api/zhihu';
 import { BaseResponse,ErrorResp } from '../../common/bean/ApiTypes';
 import { Log } from '../../utils/logutil'
 
@@ -29,6 +30,7 @@ export default struct ZhiHu{
   @State message: string = 'Hello World';
   private swiperController: SwiperController = new SwiperController()
   private data: MySwiperData = new MySwiperData([])
+  private arr: number[] = [1, 2, 3];
 
   pageStack: NavPathStack = new NavPathStack()
 
@@ -41,6 +43,14 @@ export default struct ZhiHu{
       Log.debug("request","res.data.data[0]:%{public}s",res.data.data[0].id)
       Log.debug("request","res.data.data[0]:%{public}s",res.data.data[0].imageUrl)
       Log.debug("request","res.data.data[0]:%{public}s",res.data.data[0].title)
+    }).catch((err:BaseResponse<ErrorResp>) => {
+      Log.debug("request","err.data.code:%d",err.data.code)
+      Log.debug("request",err.data.message)
+    });
+
+    getZhiHuNews("20241017").then((res) => {
+      Log.debug(res.data.message)
+      Log.debug("request","res.data.code:%{public}d",res.data.code)
     }).catch((err:BaseResponse<ErrorResp>) => {
       Log.debug("request","err.data.code:%d",err.data.code)
       Log.debug("request",err.data.message)
@@ -82,7 +92,7 @@ export default struct ZhiHu{
                     .zIndex(1)
                     .onClick(() => {
                       //this.pageStack.pushPathByName("PageOne", item)
-                      this.pageStack.pushDestinationByName("PageOne", item).catch((e:Error)=>{
+                      this.pageStack.pushDestinationByName("PageOne", { id:"9773231" }).catch((e:Error)=>{
                         // 跳转失败，会返回错误码及错误信息
                         console.log(`catch exception: ${JSON.stringify(e)}`)
                       }).then(()=>{
@@ -124,6 +134,27 @@ export default struct ZhiHu{
               console.info("current offset: " + extraInfo.currentOffset)
             })
             .height(160) // 设置高度
+
+          List({ space: 12 }) {
+            ForEach(this.arr, (item:string) => {
+              ListItem() {
+                NavRouter() {
+                  Text("NavRouter" + item)
+                    .width("100%")
+                    .height(72)
+                    .backgroundColor('#FFFFFF')
+                    .borderRadius(24)
+                    .fontSize(16)
+                    .fontWeight(500)
+                    .textAlign(TextAlign.Center)
+                  NavDestination() {
+                    Text("NavDestinationContent" + item)
+                  }
+                  .title("NavDestinationTitle" + item)
+                }
+              }
+            }, (item:string) => item)
+          }
 
         }.size({ width: '100%', height: '100%' })
       }
