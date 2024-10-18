@@ -1,12 +1,13 @@
 import {getSwiperList,getHotMovie} from "../../common/api/home"
 import { getZhiHuNews } from '../../common/api/zhihu';
-import { BaseResponse,ErrorResp } from '../../common/bean/ApiTypes';
+import { BaseResponse,ErrorResp,ZhiNewsItem } from '../../common/bean/ApiTypes';
 import { Log } from '../../utils/logutil'
+import { formatDate } from '../../utils/time';
 
 class MySwiperData implements IDataSource {
-  private list: number[] = []
+  private list: ZhiNewsItem[] = []
 
-  constructor(list: number[]) {
+  constructor(list: ZhiNewsItem[]) {
     this.list = list
   }
 
@@ -14,7 +15,7 @@ class MySwiperData implements IDataSource {
     return this.list.length
   }
 
-  getData(index: number): number {
+  getData(index: number): ZhiNewsItem {
     return this.list[index]
   }
 
@@ -29,14 +30,16 @@ class MySwiperData implements IDataSource {
 export default struct ZhiHu{
   @State message: string = 'Hello World';
   private swiperController: SwiperController = new SwiperController()
-  private data: MySwiperData = new MySwiperData([])
-  private arr: number[] = [1, 2, 3];
-
+  private swiperData: MySwiperData = new MySwiperData([])
+  private zhiNews:ZhiNewsItem[] = []
+  private currentDate= '' // 初始化为今天的日期
+  private previousDate= '' // 上一天的日期
   pageStack: NavPathStack = new NavPathStack()
 
   // 组件生命周期
   aboutToAppear() {
     Log.info('ZhiHu aboutToAppear');
+    this.currentDate = formatDate(new Date())
     getSwiperList().then((res) => {
       Log.debug(res.data.message)
       Log.debug("request","res.data.code:%{public}d",res.data.code)
@@ -48,18 +51,17 @@ export default struct ZhiHu{
       Log.debug("request",err.data.message)
     });
 
-    getZhiHuNews("20241017").then((res) => {
+    //获取知乎新闻列表
+    getZhiHuNews(this.currentDate).then((res) => {
       Log.debug(res.data.message)
       Log.debug("request","res.data.code:%{public}d",res.data.code)
+      this.zhiNews = res.data.stories
+      this.swiperData = new MySwiperData(res.data.top_stories)
+
     }).catch((err:BaseResponse<ErrorResp>) => {
       Log.debug("request","err.data.code:%d",err.data.code)
       Log.debug("request",err.data.message)
     });
-    let list: number[] = []
-    for (let i = 1; i <= 10; i++) {
-      list.push(i);
-    }
-    this.data = new MySwiperData(list)
   }
 
   // 组件生命周期
@@ -81,14 +83,12 @@ export default struct ZhiHu{
 
           // 内容项
             Swiper(this.swiperController) {
-              LazyForEach(this.data, (item: string) => {
+              LazyForEach(this.swiperData, (item: ZhiNewsItem) => {
                 Stack({ alignContent: Alignment.Center }) {
-                  Text(item.toString())
+                  Image(item.image)
                     .width('100%')
                     .height(160)
                     .backgroundColor(0xAFEEEE)
-                    .textAlign(TextAlign.Center)
-                    .fontSize(30)
                     .zIndex(1)
                     .onClick(() => {
                       //this.pageStack.pushPathByName("PageOne", item)
@@ -101,7 +101,7 @@ export default struct ZhiHu{
                     })
 
                   // 显示轮播图标题
-                  Text("标题aaaaaaaaaaaaaaaaaa啊啊啊啊啊啊啊啊")
+                  Text(item.title)
                     .padding(5)
                     .margin({ top:60 })
                     .width('100%').height(50)
@@ -113,9 +113,8 @@ export default struct ZhiHu{
                     .opacity(100) // 设置标题的透明度 不透明度设为100%，表示完全不透明
                     .backgroundColor('#808080AA') // 背景颜色设为透明
                     .zIndex(2)
-
                 }
-              }, (item: string) => item)
+              }, (item: ZhiNewsItem) => item.id)
             }
             .cachedCount(2)
             .index(1)
@@ -136,24 +135,23 @@ export default struct ZhiHu{
             .height(160) // 设置高度
 
           List({ space: 12 }) {
-            ForEach(this.arr, (item:string) => {
+            ForEach(this.zhiNews, (item:ZhiNewsItem) => {
               ListItem() {
-                NavRouter() {
-                  Text("NavRouter" + item)
-                    .width("100%")
-                    .height(72)
-                    .backgroundColor('#FFFFFF')
-                    .borderRadius(24)
-                    .fontSize(16)
-                    .fontWeight(500)
-                    .textAlign(TextAlign.Center)
-                  NavDestination() {
-                    Text("NavDestinationContent" + item)
-                  }
-                  .title("NavDestinationTitle" + item)
-                }
+                Column({ space: 0 }) {
+                  Row() {
+                    Column({ space: 0 }) {
+                      Text(item.title)
+                      Text(item.hint)
+                    }.width('70%').padding(10)
+
+                    Image(item.image).height(100).padding(10)
+
+                  }.size({ width: '100%', height: 100 })
+
+                  Divider().strokeWidth(5).color('#F1F3F5')
+                }.size({ width: '100%', height: 100 })
               }
-            }, (item:string) => item)
+            }, (itm:ZhiNewsItem) => itm.id)
           }
 
         }.size({ width: '100%', height: '100%' })

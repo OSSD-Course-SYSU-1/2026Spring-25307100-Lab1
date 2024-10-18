@@ -1,3 +1,5 @@
+import { getZhiHuDetail } from '../../../common/api/zhihu';
+import { BaseResponse,ErrorResp,ZhiDetailRespData } from '../../../common/bean/ApiTypes';
 import { Log } from '../../../utils/logutil';
 
 
@@ -6,12 +8,25 @@ export function  DetailPageBuilder() {
   DetailPage()
 }
 
-
+@Entry
 @Component
-export default struct DetailPage {
+struct DetailPage {
   @State message: string = 'Hello World';
   pageStack: NavPathStack = new NavPathStack()
   private pathInfo: NavPathInfo | null = null;
+  private detailData:ZhiDetailRespData | null = null;
+  // 只有被@Entry装饰的组件才可以调用页面的生命周期
+  onPageShow() {
+    console.info('Detail onPageShow');
+    getZhiHuDetail("9773231").then((res) => {
+      Log.debug(res.data.message)
+      Log.debug("request","res.data.code:%{public}d",res.data.code)
+      this.detailData = res.data
+    }).catch((err:BaseResponse<ErrorResp>) => {
+      Log.debug("request","err.data.code:%d",err.data.code)
+      Log.debug("request",err.data.message)
+    });
+  }
   // 组件生命周期
   aboutToAppear() {
     Log.info('Detail aboutToAppear');
@@ -31,9 +46,9 @@ export default struct DetailPage {
     NavDestination(){
 
       Column({ space: 0 }) {
-
+        Image(this.detailData?.image).width('100%').height(180)
         // 内容项
-        Text("内容").width('100%').height('100%').textAlign(TextAlign.Center).fontSize("25fp")
+        Text(this.detailData?.title).width('100%').height('100%').textAlign(TextAlign.Center).fontSize("25fp")
       }
 
     }
