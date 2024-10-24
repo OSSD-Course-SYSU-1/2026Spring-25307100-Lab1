@@ -51,7 +51,7 @@ export interface MovieRespData {
 }
 
 //==============================知乎日报
-export type ZhiNewsItem ={
+export interface ZhiNewsItem {
   id:string;
   image:string;
   title:string;
