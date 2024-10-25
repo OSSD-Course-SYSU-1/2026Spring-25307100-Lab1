@@ -2,11 +2,9 @@ import {getSwiperList} from "../../common/api/home"
 import { getZhiHuNews } from '../../common/api/zhihu';
 import { BaseResponse,ErrorResp,ZhiNewsItem } from '../../common/bean/ApiTypes';
 import { Log } from '../../utils/logutil'
-import { formatDate } from '../../utils/time';
+import { formatDate2 } from '../../utils/time';
+import { promptAction } from "@kit.ArkUI";
 
-interface EnhancedZhiNewsItem extends ZhiNewsItem {
-  isShowDivider: boolean;//增加扩展字段
-}
 
 class BasicDataSource<T> implements IDataSource {
 
@@ -88,13 +86,17 @@ export default struct ZhiHu{
   pageStack: NavPathStack = new NavPathStack()
 
   @State isRefreshing: boolean = false
-  @State loading:boolean = false //上拉加载
-  @State finished:boolean = true //是否结束
+
+  // 判断滚动条是否触底
+  @State
+  private isEnd: boolean = false;
+  // 使用Scroller对象
+  scroller: Scroller = new Scroller();
 
   // 组件生命周期
   aboutToAppear() {
     Log.info('ZhiHu aboutToAppear');
-    this.currentDate = formatDate(new Date())
+    this.currentDate = formatDate2(new Date())
     getSwiperList().then((res) => {
       Log.debug(res.data.message)
       Log.debug("request","res.data.code:%{public}d",res.data.code)
@@ -108,13 +110,21 @@ export default struct ZhiHu{
 
     //获取知乎新闻列表
     //this.finished = false
-    getZhiHuNews(this.currentDate).then((res) => {
+    getZhiHuNews(this.currentDate.replace(/-/g, '')).then((res) => {
       Log.debug(res.data.message)
       Log.debug("request","res.data.code:%{public}d",res.data.code)
+      res.data.stories.map((item, index) => {
+        item.isShowDivider = false
+        if (item.date !== this.previousDate) {
+          this.previousDate = item.date;
+          item.isShowDivider = true
+        }
+      });
       this.zhiNews = res.data.stories
       for (const itm of res.data.top_stories) {
         this.swiperData.pushData(itm)
       }
+      this.getMoreNews();
 
     }).catch((err:BaseResponse<ErrorResp>) => {
       Log.debug("request","err.data.code:%d",err.data.code)
@@ -130,34 +140,38 @@ export default struct ZhiHu{
   // 触底之后触发下一页
   getMoreNews():void {
     console.log('getMoreNews:')
-    this.loading = true
+    promptAction.showToast({ message: '加载数据' })
     const date_ = new Date(this.currentDate);
-    //console.log(date_);
     date_.setDate(date_.getDate() - 1); // 日期减一
     //console.log(date_);
-    let currentDate_ = formatDate(date_);
+    let currentDate_ = formatDate2(date_);
     console.log('currentDate_:'+currentDate_);
-    getZhiHuNews(currentDate_).then((result) => {
-      this.loading = false
+    getZhiHuNews(currentDate_.replace(/-/g, '')).then((result) => {
       console.log("getZhiHuNews,result:");
+      // 加载完数据把滚动条移至底部
+      this.scroller.scrollEdge(Edge.Bottom);
       console.log(result.data.message);
-      this.currentDate = formatDate(date_);
-      this.zhiNews = this.zhiNews.concat(result.data.stories);
-      /*
-      let store_ = this.zhiNews.map((item, index): EnhancedZhiNewsItem=> {
-        let isShowDivider = false;
-        if (item.date !== this.previousDate) {
-          this.previousDate = item.date;
-          isShowDivider = true;
-        }
-        return {
-          ...item,
-          isShowDivider: isShowDivider,
-        } as EnhancedZhiNewsItem;  // 进行类型断言
-      });
-      this.zhiNews = store_;
-      * */
+      this.currentDate = formatDate2(date_);
+      if (result.data.stories != null){
+        result.data.stories.map((item, index) => {
+          item.isShowDivider = false
+          if (item.date !== this.previousDate) {
+            this.previousDate = item.date;
+            item.isShowDivider = true
+          }
+        })
+        this.zhiNews = this.zhiNews.concat(result.data.stories);
+      }
     });
+  }
+
+  @Builder
+  private LoadingCustom() {
+    Stack() {
+      Row() {
+        LoadingProgress().width(30).color("#4095cb")
+      }
+    }.width('100%')
   }
 
   build() {
@@ -217,7 +231,7 @@ export default struct ZhiHu{
           })
           .height(200) // 设置高度
 
-          Refresh({ refreshing: $$this.isRefreshing, offset: 120, friction: 100 }) {
+          Refresh({ refreshing: $$this.isRefreshing, offset: 120, friction: 100,builder: this.LoadingCustom() }) {
             // list组件
             List({ space: 12 }) {
               ForEach(this.zhiNews, (item:ZhiNewsItem) => {
@@ -238,23 +252,37 @@ export default struct ZhiHu{
               }, (itm:ZhiNewsItem) => itm.id)
             }
             .divider({strokeWidth:2,color:'#F1F3F5'})
-            .size({ width: '100%', height: '100%' })
-            .edgeEffect(EdgeEffect.Spring) // 边缘效果设置为Spring
+            .edgeEffect(EdgeEffect.Spring)
+            // 当画面能滚动说明没有触底
+            .onScrollStart(() => {
+              this.isEnd = false
+            })
+            // 判断当前是否停止滚动
+            .onScrollStop(() => {
+              // 如果停止滚动并且满足滚动条已经在底部进行数据的加载
+              if (this.isEnd) {
+                // 加载数据
+                this.getMoreNews();
+              }
+            })
+            // 当滚动条触底把 flag 设置成 true
+            .onReachEnd(() => {
+              this.isEnd = true
+              console.log("onReachEnd")
+            })
+            .height('100%')
             .onScrollIndex((firstIndex: number, lastIndex: number) => {
               console.info('first' + firstIndex)
               console.info('last' + lastIndex)
               //this.getmorePage()
             })
-            .onReachEnd(()=>{
-              console.log("onReachEnd")
-              //加载下一页
-              if(!this.finished && !this.loading){
-                this.getMoreNews()
-              }
-            })
           }.onStateChange((refreshStatus: RefreshStatus) => {
             console.info('Refresh onStatueChange state is ' + refreshStatus)
           })
+          // 设置触发刷新的下拉偏移量
+          .refreshOffset(64)
+          // 设置当下拉距离超过refreshOffset时是否触发刷新
+          .pullToRefresh(true)
           .onRefreshing(() => {
             setTimeout(() => {
               this.isRefreshing = false
@@ -265,12 +293,12 @@ export default struct ZhiHu{
         }.size({ width: '100%', height: '100%' })
       }
     }
+    .align(Alignment.Top)
     .mode(NavigationMode.Stack)
     .titleMode(NavigationTitleMode.Free)
     .hideToolBar(true)
     .backgroundColor('#F1F3F5')
     .title("日报")
-    .margin({top:-50})
     .width('100%').height('100%')
 
   }

@@ -26,3 +26,11 @@ export const formatDate = (date: Date): string => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}${month}${day}`;
 }
+
+// 输出当前日期，格式为 "yyyy-mm-dd",js的Date对象对字符串转时间的格式有要求，带-的可以
+export const formatDate2 = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}

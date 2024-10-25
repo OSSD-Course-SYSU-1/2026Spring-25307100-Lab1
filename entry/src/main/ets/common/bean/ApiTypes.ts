@@ -58,6 +58,8 @@ export interface ZhiNewsItem {
   url:string;
   hint:string;
   date: string;
+  isShowDivider?: boolean;
+
 }
 export interface ZhiNewsRespData {
   code: number;
