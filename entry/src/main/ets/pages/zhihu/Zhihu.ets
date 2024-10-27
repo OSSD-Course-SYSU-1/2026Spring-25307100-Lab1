@@ -124,7 +124,7 @@ export default struct ZhiHu{
       for (const itm of res.data.top_stories) {
         this.swiperData.pushData(itm)
       }
-      this.getMoreNews();
+      //this.getMoreNews();
 
     }).catch((err:BaseResponse<ErrorResp>) => {
       Log.debug("request","err.data.code:%d",err.data.code)
@@ -140,7 +140,7 @@ export default struct ZhiHu{
   // 触底之后触发下一页
   getMoreNews():void {
     console.log('getMoreNews:')
-    promptAction.showToast({ message: '加载数据' })
+    promptAction.showToast({ message: '数据加载中' })
     const date_ = new Date(this.currentDate);
     date_.setDate(date_.getDate() - 1); // 日期减一
     //console.log(date_);
@@ -176,8 +176,8 @@ export default struct ZhiHu{
 
   build() {
     Navigation(this.pageStack){
-      Row() {
         Column({ space: 0 }) {
+
           // 内容项
           Swiper(this.swiperController) {
             LazyForEach(this.swiperData, (item: ZhiNewsItem) => {
@@ -233,7 +233,7 @@ export default struct ZhiHu{
 
           Refresh({ refreshing: $$this.isRefreshing, offset: 120, friction: 100,builder: this.LoadingCustom() }) {
             // list组件
-            List({ space: 12 }) {
+            List({ space: 1 }) {
               ForEach(this.zhiNews, (item:ZhiNewsItem) => {
                 ListItem() {
                   Column({ space: 0 }) {
@@ -252,7 +252,8 @@ export default struct ZhiHu{
               }, (itm:ZhiNewsItem) => itm.id)
             }
             .divider({strokeWidth:2,color:'#F1F3F5'})
-            .edgeEffect(EdgeEffect.Spring)
+            .listDirection(Axis.Vertical)
+            .edgeEffect(EdgeEffect.Spring, {alwaysEnabled:true})
             // 当画面能滚动说明没有触底
             .onScrollStart(() => {
               this.isEnd = false
@@ -270,13 +271,16 @@ export default struct ZhiHu{
               this.isEnd = true
               console.log("onReachEnd")
             })
-            .height('100%')
             .onScrollIndex((firstIndex: number, lastIndex: number) => {
               console.info('first' + firstIndex)
               console.info('last' + lastIndex)
               //this.getmorePage()
             })
-          }.onStateChange((refreshStatus: RefreshStatus) => {
+
+
+            //.backgroundColor('#ff940a31')
+          }
+          .onStateChange((refreshStatus: RefreshStatus) => {
             console.info('Refresh onStatueChange state is ' + refreshStatus)
           })
           // 设置触发刷新的下拉偏移量
@@ -290,15 +294,15 @@ export default struct ZhiHu{
             console.log('onRefreshing test')
           })
 
-        }.size({ width: '100%', height: '100%' })
-      }
+        }
+        //.backgroundColor('#ff94610a')
+
     }
-    .align(Alignment.Top)
     .mode(NavigationMode.Stack)
-    .titleMode(NavigationTitleMode.Free)
-    .hideToolBar(true)
-    .backgroundColor('#F1F3F5')
-    .title("日报")
+    .titleMode(NavigationTitleMode.Mini)
+    .title("知乎日报")
+    .hideBackButton(true)
+    //.backgroundColor('#ff0a3894')
     .width('100%').height('100%')
 
   }

@@ -33,6 +33,13 @@ struct Index {
   build() {
     Row() {
       Column() {
+        // 标题栏
+        Text("日报")
+          .size({ width: '100%', height: 50 })
+          .backgroundColor("#28bff1")
+          .fontColor("#ffffff")
+          .textAlign(TextAlign.Center)
+          .fontSize("18fp")
         Text(this.message)
           .id('HelloWorld')
           .fontSize(50)
