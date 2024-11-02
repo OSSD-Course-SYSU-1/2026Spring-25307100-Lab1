@@ -189,7 +189,7 @@ export default struct ZhiHu{
                   .zIndex(1)
                   .onClick(() => {
                     //this.pageStack.pushPathByName("PageOne", item)
-                    this.pageStack.pushDestinationByName("PageOne", { id:"9773231" }).catch((e:Error)=>{
+                    this.pageStack.pushDestinationByName("ZhiPageDetail", { id:item.id }).catch((e:Error)=>{
                       // 跳转失败，会返回错误码及错误信息
                       console.log(`catch exception: ${JSON.stringify(e)}`)
                     }).then(()=>{
@@ -234,9 +234,14 @@ export default struct ZhiHu{
           Refresh({ refreshing: $$this.isRefreshing, offset: 120, friction: 100,builder: this.LoadingCustom() }) {
             // list组件
             List({ space: 1 }) {
-              ForEach(this.zhiNews, (item:ZhiNewsItem) => {
+              ForEach(this.zhiNews, (item:ZhiNewsItem,idx) => {
                 ListItem() {
                   Column({ space: 0 }) {
+                    if(item.isShowDivider && (idx !=0)){
+                      Text(item.date).width("90%").alignSelf(ItemAlign.Start)
+                        .padding({left:10})
+                        .margin({top:-10})
+                    }
                     Row() {
                       Column({ space: 15 }) {
                         Text(item.title).fontSize(16).fontWeight(FontWeight.Bold).align(Alignment.Start).width('100%')
@@ -247,8 +252,15 @@ export default struct ZhiHu{
 
                     }.size({ width: '100%', height: 100 })
 
-                  }.size({ width: '100%', height: 100 })
-                }
+                  }.size({ width: '100%', height: 120 })
+                }.onClick(() => {
+                  this.pageStack.pushDestinationByName("ZhiPageDetail", { id:item.id }).catch((e:Error)=>{
+                    // 跳转失败，会返回错误码及错误信息
+                    console.log(`catch exception: ${JSON.stringify(e)}`)
+                  }).then(()=>{
+                    // 跳转成功
+                  });
+                })
               }, (itm:ZhiNewsItem) => itm.id)
             }
             .divider({strokeWidth:2,color:'#F1F3F5'})

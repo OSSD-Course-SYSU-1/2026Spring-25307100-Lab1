@@ -69,7 +69,7 @@ export interface ZhiNewsRespData {
   date: string;
 }
 
-type ZhiDetailItem={
+export type ZhiDetailItem={
   types:string;
   value:string;
 }

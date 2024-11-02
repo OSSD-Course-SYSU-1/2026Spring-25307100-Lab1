@@ -1,6 +1,7 @@
 import { getZhiHuDetail } from '../../../common/api/zhihu';
-import { BaseResponse,ErrorResp,ZhiDetailRespData } from '../../../common/bean/ApiTypes';
+import { BaseResponse,ErrorResp,ZhiDetailRespData,ZhiDetailItem } from '../../../common/bean/ApiTypes';
 import { Log } from '../../../utils/logutil';
+import { LengthMetrics } from '@kit.ArkUI';
 
 
 @Builder
@@ -8,25 +9,14 @@ export function  DetailPageBuilder() {
   DetailPage()
 }
 
-@Entry
 @Component
 struct DetailPage {
   @State message: string = 'Hello World';
   pageStack: NavPathStack = new NavPathStack()
   private pathInfo: NavPathInfo | null = null;
-  private detailData:ZhiDetailRespData | null = null;
-  // 只有被@Entry装饰的组件才可以调用页面的生命周期
-  onPageShow() {
-    console.info('Detail onPageShow');
-    getZhiHuDetail("9773231").then((res) => {
-      Log.debug(res.data.message)
-      Log.debug("request","res.data.code:%{public}d",res.data.code)
-      this.detailData = res.data
-    }).catch((err:BaseResponse<ErrorResp>) => {
-      Log.debug("request","err.data.code:%d",err.data.code)
-      Log.debug("request",err.data.message)
-    });
-  }
+  @State detailData:ZhiDetailRespData | null = null;
+  private pageId = ''
+
   // 组件生命周期
   aboutToAppear() {
     Log.info('Detail aboutToAppear');
@@ -44,13 +34,46 @@ struct DetailPage {
   }
   build() {
     NavDestination(){
+      Scroll() {
+        Column({ space: 0 }) {
+          Stack({ alignContent: Alignment.Bottom }) {
+            Image(this.detailData?.image).width('100%').height(250).zIndex(1)
+            // 显示轮播图标题
+            Text(this.detailData?.title)
+              .padding(5)
+              .margin({ bottom: 10 })
+              .width('100%')
+              .height(50)
+              .textAlign(TextAlign.Center)
+              .maxLines(2)
+              .textOverflow({ overflow: TextOverflow.Clip })
+              .fontSize(16)
+              .fontColor(Color.White)
+              .opacity(100)// 设置标题的透明度 不透明度设为100%，表示完全不透明
+              .backgroundColor('#808080AA')// 背景颜色设为透明
+              .zIndex(2)
+          }.height(250) // 设置高度
 
-      Column({ space: 0 }) {
-        Image(this.detailData?.image).width('100%').height(180)
-        // 内容项
-        Text(this.detailData?.title).width('100%').height('100%').textAlign(TextAlign.Center).fontSize("25fp")
+          Text(`${this.detailData?.author ?? ""} ${this.detailData?.bio ?? ""}`)
+            .fontSize(14)
+            .fontColor("#999")
+            .padding(10).width('100%')
+
+
+          Column() {
+            ForEach(this.detailData?.content, (item: ZhiDetailItem, idx) => {
+              if (item.types === 'p') {
+                Text(item.value).fontSize(16).padding(10).lineSpacing(LengthMetrics.px(30)).width('100%').alignSelf(ItemAlign.Start)
+              } else if (item.types === 'p.strong') {
+                Text(item.value).fontSize(16).fontWeight(FontWeight.Bold).padding(10).width('100%').alignSelf(ItemAlign.Start)
+              } else if (item.types === 'img') {
+                Image(item.value).padding(10)
+              }
+            })
+          }
+
+        }
       }
-
     }
       .title("日报详情")
       .width('100%')
@@ -58,12 +81,28 @@ struct DetailPage {
      .onReady(ctx => {
        this.pageStack = ctx.pathStack
        //从上个页面拿参数
-       this.pageStack.getParamByName("PageOne")
+       this.pageStack.getParamByName("ZhiPageDetail")
        this.pathInfo = ctx.pathInfo
-       let par = ctx.pathInfo.param as string
-       Log.debug("par:%s",par)
+
+       interface params {
+         id: string;
+       }
+       let par = ctx.pathInfo.param as params
+       Log.debug("par:%s",par.id)
+       this.pageId = par.id
        Log.info('current page config info is ' + JSON.stringify(ctx.getConfigInRouteMap()));
      })
+    .onShown(()=>{
+      console.info('Detail onShown');
+      getZhiHuDetail(this.pageId).then((res) => {
+        Log.debug(res.data.message)
+        Log.debug("request","res.data.code:%{public}d",res.data.code)
+        this.detailData = res.data
+      }).catch((err:BaseResponse<ErrorResp>) => {
+        Log.debug("request","err.data.code:%d",err.data.code)
+        Log.debug("request",err.data.message)
+      });
+    })
 
   }
 }
