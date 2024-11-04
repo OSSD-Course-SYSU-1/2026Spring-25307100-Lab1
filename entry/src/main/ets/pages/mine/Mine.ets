@@ -1,8 +1,49 @@
 
+interface FavBtnItem{
+  count:number;
+  title:string;
+  pagePath:string;
+}
 
+interface ListBtnItem{
+  title:string;
+  pagePath:string;
+}
+
+interface FunBtnItem{
+  title:string;
+  color:string;
+  icon:string;
+  pagePath:string;
+}
+
+@Entry
 @Component
 export default struct Mine {
   pageStack: NavPathStack = new NavPathStack()
+
+  private favButtons:FavBtnItem[] = [
+    {count:0,title:"收藏影视",pagePath:""},
+    {count:0,title:"播放历史",pagePath:""},
+    {count:0,title:"收藏音乐",pagePath:""},
+    {count:0,title:"我的足迹",pagePath:""},
+  ]
+
+  private listButtons:ListBtnItem[] = [
+    {title:"我的消息",pagePath:""},
+    {title:"意见反馈",pagePath:""},
+    {title:"分享链接",pagePath:""},
+    {title:"检查更新",pagePath:""},
+    {title:"关于我们",pagePath:""},
+  ]
+
+  private funButtons:FunBtnItem[] = [
+    {title:"电视直播",color:'#00FF00',icon:'app.media.camera_video',pagePath:""},
+    {title:"本地视频",color:'#00FF00',icon:'app.media.music',pagePath:""},
+    {title:"本地图片",color:'#00FF00',icon:'app.media.music',pagePath:""},
+    {title:"在线音乐",color:'#00FF00',icon:'app.media.music',pagePath:""},
+    {title:"播放链接",color:'#00FF00',icon:'app.media.music',pagePath:""},
+  ]
   build() {
     Navigation(this.pageStack) {
       Column() {
@@ -15,26 +56,12 @@ export default struct Mine {
         .size({ width: '100%', height: 200 })
 
         Row({space:30}){
-          Column({space:2}){
-            Text('0')
-            Text('收藏影视').fontColor('#AAAAAA')
-          }
-
-          Column({space:2}){
-            Text('0')
-            Text('播放历史').fontColor('#AAAAAA')
-          }
-
-          Column({space:2}){
-            Text('0')
-            Text('收藏音乐').fontColor('#AAAAAA')
-          }
-
-          Column({space:2}){
-            Text('0')
-            Text('我的足迹').fontColor('#AAAAAA')
-          }
-
+          ForEach(this.favButtons, (item:FavBtnItem,idx) => {
+            Column({space:2}){
+              Text(item.count.toString())
+              Text(item.title).fontColor('#AAAAAA')
+            }
+          })
         }
         .justifyContent(FlexAlign.Center)
         .backgroundColor(Color.White)
@@ -42,42 +69,33 @@ export default struct Mine {
 
         //功能列表
         Column(){
-          Text('功能列表').align(Alignment.TopStart).padding(10)
+          Text('功能列表').width('100%').padding(10)
+          Grid() {
+            ForEach(this.funButtons, (item:FunBtnItem,idx) => {
+              GridItem() {
+                Column({space:2}){
+                  Image($r(item.icon)).width(32).fillColor(item.color)
+                  Text(item.title).fontSize(14)
+                }
+              }
+            })
+            }
+          .rowsTemplate('1fr 1fr')
+          .columnsTemplate('1fr 1fr 1fr 1fr')
+          .width('100%').height(150)
 
         }.width('100%').height(200).justifyContent(FlexAlign.Start).backgroundColor(Color.White)
 
         //菜单项
         List({ space: 15 }) {
-          ListItem(){
-            Row(){
-             Text('我的消息').layoutWeight(12)
-             Text('>').fontColor('#AAAAAA').layoutWeight(1)
+          ForEach(this.listButtons, (item:ListBtnItem,idx) => {
+            ListItem(){
+              Row(){
+                Text(item.title).layoutWeight(12)
+                Text('>').fontColor('#AAAAAA').layoutWeight(1)
+              }
             }
-          }
-          ListItem(){
-            Row(){
-              Text('意见反馈').layoutWeight(12)
-              Text('>').fontColor('#AAAAAA').layoutWeight(1)
-            }
-          }
-          ListItem(){
-            Row(){
-              Text('分享链接').layoutWeight(12)
-              Text('>').fontColor('#AAAAAA').layoutWeight(1)
-            }
-          }
-          ListItem(){
-            Row(){
-              Text('检查更新').layoutWeight(12)
-              Text('>').fontColor('#AAAAAA').layoutWeight(1)
-            }
-          }
-          ListItem(){
-            Row(){
-              Text('关于我们').layoutWeight(12)
-              Text('>').fontColor('#AAAAAA').layoutWeight(1)
-            }
-          }
+          })
         }.divider({strokeWidth:2,color:'#F1F3F5'})
         .padding(10)
       }
