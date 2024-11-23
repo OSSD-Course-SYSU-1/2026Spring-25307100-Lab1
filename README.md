@@ -2,6 +2,8 @@
 
 ## 简介
 本软件使用坚果派 @nutpi/request网络库,harmonyos NEXT原生开发，实现了仿知乎日报的功能，包括首页、主题、新闻详情等。 
+
+![首页](doc/首页.png)
    
 ## nutpi/request网络库介绍
 
