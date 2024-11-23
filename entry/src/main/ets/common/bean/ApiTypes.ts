@@ -1,7 +1,7 @@
 type AnyObject = Record<string | number | symbol, any>
 export interface BaseResponse<T>{
-  status: number;
-  statusText:string;
+  statusCode: number;
+  errMsg:string;
   header?: AnyObject;
   data:T;
 }

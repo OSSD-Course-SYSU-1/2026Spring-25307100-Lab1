@@ -1,10 +1,10 @@
-import { setRequestConfig } from '../../utils/http';
+import httpClient, { setRequestConfig } from '../../utils/http';
 import { BaseResponse,ZhiNewsRespData,ZhiDetailRespData } from '../bean/ApiTypes';
 
 // 调用setRequestConfig函数进行请求配置
 setRequestConfig();
 
-const http = globalThis.$http;
+const http = httpClient;
 
 // 获取知乎列表页api接口
 export const getZhiHuNews = (date:string): Promise<BaseResponse<ZhiNewsRespData>> => http.get('/zhihunews/'+date);
