@@ -2,6 +2,7 @@ import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import PreferencesUtils from '../utils/PreferencesUtils';
+import ThemeManager from '../utils/ThemeManager';
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
@@ -9,6 +10,8 @@ export default class EntryAbility extends UIAbility {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onCreate');
     // 创建首选项数据库
     PreferencesUtils.createPreferences(this.context);
+    // 初始化主题管理器
+    ThemeManager.init(this.context);
   }
 
   onDestroy(): void {

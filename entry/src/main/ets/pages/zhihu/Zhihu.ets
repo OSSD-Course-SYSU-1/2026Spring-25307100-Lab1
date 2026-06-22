@@ -4,6 +4,7 @@ import { BaseResponse,ErrorResp,ZhiNewsItem } from '../../common/bean/ApiTypes';
 import { Log } from '../../utils/logutil'
 import { formatDate2 } from '../../utils/time';
 import { promptAction } from "@kit.ArkUI";
+import ThemeManager from '../../utils/ThemeManager';
 
 
 class BasicDataSource<T> implements IDataSource {
@@ -77,6 +78,7 @@ class SwiperDataSource<T> extends BasicDataSource<T> {
 @Component
 export default struct ZhiHu{
   @State message: string = 'Hello World';
+  @State isDarkMode: boolean = ThemeManager.isDarkMode();
   private swiperController: SwiperController = new SwiperController()
   private swiperData: SwiperDataSource<ZhiNewsItem> = new SwiperDataSource()
   @State zhiNews:ZhiNewsItem[] = []
@@ -96,6 +98,7 @@ export default struct ZhiHu{
   // 组件生命周期
   aboutToAppear() {
     Log.info('ZhiHu aboutToAppear');
+    this.setupThemeListener();
     this.currentDate = formatDate2(new Date())
     getSwiperList().then((res) => {
       Log.debug(res.data.message)
@@ -135,6 +138,17 @@ export default struct ZhiHu{
   // 组件生命周期
   aboutToDisappear() {
     Log.info('ZhiHu aboutToDisappear');
+    // 清理主题监听器
+    ThemeManager.removeThemeChangeListener((theme: string) => {
+      this.isDarkMode = theme === 'dark';
+    });
+  }
+
+  // 在 aboutToAppear 中添加主题监听
+  private setupThemeListener() {
+    ThemeManager.addThemeChangeListener((theme: string) => {
+      this.isDarkMode = theme === 'dark';
+    });
   }
 
   // 触底之后触发下一页
@@ -177,7 +191,6 @@ export default struct ZhiHu{
   build() {
     Navigation(this.pageStack){
         Column({ space: 0 }) {
-
           // 内容项
           Swiper(this.swiperController) {
             LazyForEach(this.swiperData, (item: ZhiNewsItem) => {
@@ -206,7 +219,7 @@ export default struct ZhiHu{
                   .maxLines(2)
                   .textOverflow({overflow:TextOverflow.Clip})
                   .fontSize(20)
-                  .fontColor(Color.White)
+                  .fontColor('#FFFFFF')
                   .opacity(100) // 设置标题的透明度 不透明度设为100%，表示完全不透明
                   .backgroundColor('#808080AA') // 背景颜色设为透明
                   .zIndex(2)
@@ -241,11 +254,12 @@ export default struct ZhiHu{
                       Text(item.date).width("90%").alignSelf(ItemAlign.Start)
                         .padding({left:10})
                         .margin({top:-10})
+                        .fontColor(ThemeManager.getTextTertiaryColor())
                     }
                     Row() {
                       Column({ space: 15 }) {
-                        Text(item.title).fontSize(16).fontWeight(FontWeight.Bold).align(Alignment.Start).width('100%')
-                        Text(item.hint).align(Alignment.Start).width('100%')
+                        Text(item.title).fontSize(16).fontWeight(FontWeight.Bold).align(Alignment.Start).width('100%').fontColor(ThemeManager.getTextPrimaryColor())
+                        Text(item.hint).align(Alignment.Start).width('100%').fontColor(ThemeManager.getTextSecondaryColor())
                       }.justifyContent(FlexAlign.Start).width('70%').padding(5)
 
                       Image(item.image).objectFit(ImageFit.Cover).borderRadius(5).height(100).padding(2)
@@ -263,7 +277,7 @@ export default struct ZhiHu{
                 })
               }, (itm:ZhiNewsItem) => itm.id)
             }
-            .divider({strokeWidth:2,color:'#F1F3F5'})
+            .divider({strokeWidth:2,color:ThemeManager.getDividerColor()})
             .listDirection(Axis.Vertical)
             .edgeEffect(EdgeEffect.Spring, {alwaysEnabled:true})
             // 当画面能滚动说明没有触底
@@ -307,14 +321,14 @@ export default struct ZhiHu{
           })
 
         }
-        //.backgroundColor('#ff94610a')
+        .backgroundColor(ThemeManager.getBackgroundColor())
 
     }
     .mode(NavigationMode.Stack)
     .titleMode(NavigationTitleMode.Mini)
     .title("知乎日报")
     .hideBackButton(true)
-    //.backgroundColor('#ff0a3894')
+    .backgroundColor(ThemeManager.getBackgroundColor())
     .width('100%').height('100%')
 
   }

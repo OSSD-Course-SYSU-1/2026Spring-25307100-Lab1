@@ -2,7 +2,6 @@ import {getSwiperList,getHotMovie} from "../common/api/home"
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { BaseResponse,ErrorResp } from '../common/bean/ApiTypes';
 
-@Entry
 @Component
 struct Index {
   @State message: string = 'Hello World';

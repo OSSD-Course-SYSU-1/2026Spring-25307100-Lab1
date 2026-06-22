@@ -1,4 +1,6 @@
 
+import ThemeManager from '../../utils/ThemeManager'
+
 interface FavBtnItem{
   count:number;
   title:string;
@@ -17,10 +19,10 @@ interface FunBtnItem{
   pagePath:string;
 }
 
-@Entry
 @Component
 export default struct Mine {
   pageStack: NavPathStack = new NavPathStack()
+  @State isDarkMode: boolean = ThemeManager.isDarkMode()
 
   private favButtons:FavBtnItem[] = [
     {count:0,title:"收藏影视",pagePath:""},
@@ -44,38 +46,52 @@ export default struct Mine {
     {title:"在线音乐",color:'#00FF00',icon:'app.media.music',pagePath:""},
     {title:"播放链接",color:'#00FF00',icon:'app.media.music',pagePath:""},
   ]
+  aboutToAppear() {
+    // 监听主题变化
+    ThemeManager.addThemeChangeListener((theme: string) => {
+      this.isDarkMode = theme === 'dark';
+    });
+  }
+
+  aboutToDisappear() {
+    // 清理监听器
+    ThemeManager.removeThemeChangeListener((theme: string) => {
+      this.isDarkMode = theme === 'dark';
+    });
+  }
+
   build() {
     Navigation(this.pageStack) {
       Column() {
         Column(){
-            Button('登录').width(120).fontColor(Color.Green)
-              .align(Alignment.Center).backgroundColor(Color.White)
+            Button('登录').width(120).fontColor(ThemeManager.getPrimaryColor())
+              .align(Alignment.Center).backgroundColor(ThemeManager.getCardBackgroundColor())
         }
         .justifyContent(FlexAlign.Center)
-        .backgroundColor('rgba(85, 170, 255,0.6)')
+        .backgroundColor(ThemeManager.getCardBackgroundColor())
         .size({ width: '100%', height: 200 })
 
         Row({space:30}){
           ForEach(this.favButtons, (item:FavBtnItem,idx) => {
             Column({space:2}){
-              Text(item.count.toString())
-              Text(item.title).fontColor('#AAAAAA')
+              Text(item.count.toString()).fontColor(ThemeManager.getTextPrimaryColor())
+              Text(item.title).fontColor(ThemeManager.getTextSecondaryColor())
             }
           })
         }
         .justifyContent(FlexAlign.Center)
-        .backgroundColor(Color.White)
+        .backgroundColor(ThemeManager.getCardBackgroundColor())
         .width('100%').height(80)
 
         //功能列表
         Column(){
-          Text('功能列表').width('100%').padding(10)
+          Text('功能列表').width('100%').padding(10).fontColor(ThemeManager.getTextPrimaryColor())
           Grid() {
             ForEach(this.funButtons, (item:FunBtnItem,idx) => {
               GridItem() {
                 Column({space:2}){
                   Image($r(item.icon)).width(32).fillColor(item.color)
-                  Text(item.title).fontSize(14)
+                  Text(item.title).fontSize(14).fontColor(ThemeManager.getTextPrimaryColor())
                 }
               }
             })
@@ -84,28 +100,29 @@ export default struct Mine {
           .columnsTemplate('1fr 1fr 1fr 1fr')
           .width('100%').height(150)
 
-        }.width('100%').height(200).justifyContent(FlexAlign.Start).backgroundColor(Color.White)
+        }.width('100%').height(200).justifyContent(FlexAlign.Start).backgroundColor(ThemeManager.getCardBackgroundColor())
 
         //菜单项
         List({ space: 15 }) {
           ForEach(this.listButtons, (item:ListBtnItem,idx) => {
             ListItem(){
               Row(){
-                Text(item.title).layoutWeight(12)
-                Text('>').fontColor('#AAAAAA').layoutWeight(1)
+                Text(item.title).layoutWeight(12).fontColor(ThemeManager.getTextPrimaryColor())
+                Text('>').fontColor(ThemeManager.getTextSecondaryColor()).layoutWeight(1)
               }
             }
           })
-        }.divider({strokeWidth:2,color:'#F1F3F5'})
+        }.divider({strokeWidth:2,color:ThemeManager.getDividerColor()})
         .padding(10)
       }
-      .backgroundColor('F4F4F4')
+      .backgroundColor(ThemeManager.getBackgroundColor())
       .size({ width: '100%', height: '100%' })
     }
     .mode(NavigationMode.Stack)
     .titleMode(NavigationTitleMode.Mini)
     .title("我的")
     .hideBackButton(true)
+    .backgroundColor(ThemeManager.getBackgroundColor())
     .width('100%').height('100%')
 
   }

@@ -1,11 +1,14 @@
 import Home from "../pages/home/Home"
 import ZhiHu from "../pages/zhihu/Zhihu"
 import Mine from "../pages/mine/Mine"
+import ThemeManager from "../utils/ThemeManager"
+import { ThemeIconButton } from "../components/ThemeToggle"
 
 @Entry
 @Component
 struct Index {
   @State currentIndex: number = 0
+  @State isDarkMode: boolean = ThemeManager.isDarkMode()
   private controller: TabsController = new TabsController()
 
   // 只有被@Entry装饰的组件才可以调用页面的生命周期
@@ -22,27 +25,67 @@ struct Index {
     console.info('Index onBackPress');
   }
 
+  aboutToAppear() {
+    // 监听主题变化
+    ThemeManager.addThemeChangeListener((theme: string) => {
+      this.isDarkMode = theme === 'dark';
+    });
+  }
+
+  aboutToDisappear() {
+    // 清理监听器
+    ThemeManager.removeThemeChangeListener((theme: string) => {
+      this.isDarkMode = theme === 'dark';
+    });
+  }
+
   build() {
     Column() {
-      Tabs({
-        barPosition: BarPosition.End,
-        controller: this.controller
-      }) {
-        TabContent() {
-          Home()
-        }.tabBar(this.TabBuilder('首页', 0, $r('app.media.icon_sort'), $r('app.media.icon_sort_default')))
+      // 标题栏
+      Row() {
+        Text('知乎日报')
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .fontColor(ThemeManager.getTextPrimaryColor())
+          .layoutWeight(1)
+          .margin({ left: 16 })
+        
+        // 主题切换按钮
+        ThemeIconButton({ isDarkMode: $isDarkMode })
+          .margin({ right: 16 })
+      }
+      .width('100%')
+      .height(56)
+      .backgroundColor(ThemeManager.getTabBarBackgroundColor())
+      .alignItems(VerticalAlign.Center)
+      .justifyContent(FlexAlign.SpaceBetween)
 
-        TabContent() {
-          ZhiHu()
-        }.tabBar(this.TabBuilder('日报', 1, $r('app.media.search_select'), $r('app.media.search_defaut')))
+      // 主内容区域
+      Column() {
+        Tabs({
+          barPosition: BarPosition.End,
+          controller: this.controller
+        }) {
+          TabContent() {
+            Home()
+          }.tabBar(this.TabBuilder('首页', 0, $r('app.media.icon_sort'), $r('app.media.icon_sort_default')))
 
-        TabContent() {
-           Mine()
-        }.tabBar(this.TabBuilder('我的', 2, $r('app.media.user_selected'), $r('app.media.user')))
-      }.scrollable(false) // 禁止滑动切换
+          TabContent() {
+            ZhiHu()
+          }.tabBar(this.TabBuilder('日报', 1, $r('app.media.search_select'), $r('app.media.search_defaut')))
+
+          TabContent() {
+            Mine()
+          }.tabBar(this.TabBuilder('我的', 2, $r('app.media.user_selected'), $r('app.media.user')))
+        }
+        .scrollable(false) // 禁止滑动切换
+      }
+      .width('100%')
+      .height('100%')
     }
     .width('100%')
     .height('100%')
+    .backgroundColor(ThemeManager.getBackgroundColor())
   }
 
   // 自定义导航页签的样式
@@ -50,8 +93,9 @@ struct Index {
     Column() {
       Image(this.currentIndex === targetIndex ? selectedImg : normalImg)
         .size({ width: 25, height: 25 })
+        .fillColor(this.currentIndex === targetIndex ? ThemeManager.getPrimaryColor() : ThemeManager.getTextSecondaryColor())
       Text(title)
-        .fontColor(this.currentIndex === targetIndex ? '#28bff1' : '#8a8a8a')
+        .fontColor(this.currentIndex === targetIndex ? ThemeManager.getPrimaryColor() : ThemeManager.getTextSecondaryColor())
     }
     .width('100%')
     .height(50)
