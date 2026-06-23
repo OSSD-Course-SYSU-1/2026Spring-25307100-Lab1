@@ -5,6 +5,8 @@ import { Log } from '../../utils/logutil'
 import { formatDate2 } from '../../utils/time';
 import { promptAction } from "@kit.ArkUI";
 import ThemeManager from '../../utils/ThemeManager';
+import { BreakpointConstants, BreakpointType } from "../../utils/BreakpointSystem";
+import BreakpointSystem from "../../utils/BreakpointSystem";
 
 
 class BasicDataSource<T> implements IDataSource {
@@ -79,9 +81,21 @@ class SwiperDataSource<T> extends BasicDataSource<T> {
 export default struct ZhiHu{
   @State message: string = 'Hello World';
   @State isDarkMode: boolean = ThemeManager.isDarkMode();
+  @StorageProp(BreakpointConstants.CURRENT_BREAKPOINT_KEY) currentBreakpoint: string = BreakpointConstants.BREAKPOINT_NAMES[0];
   private swiperController: SwiperController = new SwiperController()
   private swiperData: SwiperDataSource<ZhiNewsItem> = new SwiperDataSource()
   @State zhiNews:ZhiNewsItem[] = []
+  
+  // 判断是否为大屏设备
+  private isLargeScreen(): boolean {
+    const breakpoint = this.currentBreakpoint;
+    return breakpoint === BreakpointType.LG || breakpoint === BreakpointType.XL;
+  }
+  
+  // 根据屏幕尺寸获取网格列数
+  private getGridColumns(): number {
+    return BreakpointSystem.getGridColumns();
+  }
 
   private currentDate= '' // 初始化为今天的日期
   private previousDate= '' // 上一天的日期
@@ -188,6 +202,39 @@ export default struct ZhiHu{
     }.width('100%')
   }
 
+  // 新闻项构建器
+  @Builder
+  private NewsItem(item: ZhiNewsItem, showDateDivider: boolean, idx: number) {
+    Column({ space: 0 }) {
+      if (showDateDivider && (idx != 0)) {
+        Text(item.date).width("90%").alignSelf(ItemAlign.Start)
+          .padding({ left: 10 })
+          .margin({ top: -10 })
+          .fontColor(ThemeManager.getTextTertiaryColor())
+      }
+      Row() {
+        Column({ space: 15 }) {
+          Text(item.title).fontSize(16).fontWeight(FontWeight.Bold).align(Alignment.Start).width('100%').fontColor(ThemeManager.getTextPrimaryColor())
+          Text(item.hint).align(Alignment.Start).width('100%').fontColor(ThemeManager.getTextSecondaryColor())
+        }.justifyContent(FlexAlign.Start).width('70%').padding(5)
+
+        Image(item.image).objectFit(ImageFit.Cover).borderRadius(5).height(100).padding(2)
+
+      }.size({ width: '100%', height: 100 })
+
+    }.size({ width: '100%', height: 120 })
+    .onClick(() => {
+      this.pageStack.pushDestinationByName("ZhiPageDetail", { id: item.id }).catch((e: Error) => {
+        // 跳转失败，会返回错误码及错误信息
+        console.log(`catch exception: ${JSON.stringify(e)}`)
+      }).then(() => {
+        // 跳转成功
+      });
+    })
+  }
+
+
+
   build() {
     Navigation(this.pageStack){
         Column({ space: 0 }) {
@@ -242,69 +289,118 @@ export default struct ZhiHu{
             console.info("index: " + index)
             console.info("current offset: " + extraInfo.currentOffset)
           })
-          .height(200) // 设置高度
+          .height(200)
 
           Refresh({ refreshing: $$this.isRefreshing, offset: 120, friction: 100,builder: this.LoadingCustom() }) {
-            // list组件
-            List({ space: 1 }) {
-              ForEach(this.zhiNews, (item:ZhiNewsItem,idx) => {
-                ListItem() {
-                  Column({ space: 0 }) {
-                    if(item.isShowDivider && (idx !=0)){
-                      Text(item.date).width("90%").alignSelf(ItemAlign.Start)
-                        .padding({left:10})
-                        .margin({top:-10})
-                        .fontColor(ThemeManager.getTextTertiaryColor())
+            // 响应式布局：小屏使用列表，大屏使用网格
+            if (this.isLargeScreen()) {
+              // 大屏网格布局
+              const columns = this.getGridColumns();
+              Grid() {
+                ForEach(this.zhiNews, (item: ZhiNewsItem, idx) => {
+                  GridItem() {
+                    Column({ space: 8 }) {
+                      // 日期分隔器
+                      if (!!item.isShowDivider && (idx != 0)) {
+                        Text(item.date)
+                          .width('100%')
+                          .alignSelf(ItemAlign.Start)
+                          .padding({ left: 16, top: 16, bottom: 8 })
+                          .fontSize(14)
+                          .fontColor(ThemeManager.getTextTertiaryColor())
+                          .fontWeight(FontWeight.Medium)
+                      }
+                      
+                      // 新闻卡片
+                      Column({ space: 8 }) {
+                        // 图片
+                        Image(item.image)
+                          .objectFit(ImageFit.Cover)
+                          .width('100%')
+                          .height(120)
+                          .borderRadius(8)
+                        
+                        // 内容
+                        Column({ space: 4 }) {
+                          Text(item.title)
+                            .fontSize(14)
+                            .fontWeight(FontWeight.Bold)
+                            .fontColor(ThemeManager.getTextPrimaryColor())
+                            .maxLines(2)
+                            .textOverflow({ overflow: TextOverflow.Ellipsis })
+                            .height(40)
+                          
+                          Text(item.hint)
+                            .fontSize(12)
+                            .fontColor(ThemeManager.getTextSecondaryColor())
+                            .maxLines(1)
+                            .textOverflow({ overflow: TextOverflow.Ellipsis })
+                        }
+                        .padding({ left: 8, right: 8, bottom: 8 })
+                        .width('100%')
+                      }
+                      .backgroundColor(ThemeManager.getCardBackgroundColor())
+                      .borderRadius(12)
+                      .border({ width: 1, color: ThemeManager.getBorderColor() })
+                      .shadow({ radius: 8, color: '#1A000000', offsetX: 0, offsetY: 2 })
                     }
-                    Row() {
-                      Column({ space: 15 }) {
-                        Text(item.title).fontSize(16).fontWeight(FontWeight.Bold).align(Alignment.Start).width('100%').fontColor(ThemeManager.getTextPrimaryColor())
-                        Text(item.hint).align(Alignment.Start).width('100%').fontColor(ThemeManager.getTextSecondaryColor())
-                      }.justifyContent(FlexAlign.Start).width('70%').padding(5)
-
-                      Image(item.image).objectFit(ImageFit.Cover).borderRadius(5).height(100).padding(2)
-
-                    }.size({ width: '100%', height: 100 })
-
-                  }.size({ width: '100%', height: 120 })
-                }.onClick(() => {
-                  this.pageStack.pushDestinationByName("ZhiPageDetail", { id:item.id }).catch((e:Error)=>{
-                    // 跳转失败，会返回错误码及错误信息
-                    console.log(`catch exception: ${JSON.stringify(e)}`)
-                  }).then(()=>{
-                    // 跳转成功
-                  });
-                })
-              }, (itm:ZhiNewsItem) => itm.id)
-            }
-            .divider({strokeWidth:2,color:ThemeManager.getDividerColor()})
-            .listDirection(Axis.Vertical)
-            .edgeEffect(EdgeEffect.Spring, {alwaysEnabled:true})
-            // 当画面能滚动说明没有触底
-            .onScrollStart(() => {
-              this.isEnd = false
-            })
-            // 判断当前是否停止滚动
-            .onScrollStop(() => {
-              // 如果停止滚动并且满足滚动条已经在底部进行数据的加载
-              if (this.isEnd) {
-                // 加载数据
-                this.getMoreNews();
+                    .width('100%')
+                    .onClick(() => {
+                      this.pageStack.pushDestinationByName("ZhiPageDetail", { id: item.id }).catch((e: Error) => {
+                        console.log(`catch exception: ${JSON.stringify(e)}`)
+                      }).then(() => {
+                        // 跳转成功
+                      });
+                    })
+                  }
+                }, (itm: ZhiNewsItem) => itm.id)
               }
-            })
-            // 当滚动条触底把 flag 设置成 true
-            .onReachEnd(() => {
-              this.isEnd = true
-              console.log("onReachEnd")
-            })
-            .onScrollIndex((firstIndex: number, lastIndex: number) => {
-              console.info('first' + firstIndex)
-              console.info('last' + lastIndex)
-              //this.getmorePage()
-            })
-
-
-            //.backgroundColor('#ff940a31')
+              .columnsTemplate(`1fr 1fr ${columns > 2 ? '1fr ' : ''}${columns > 3 ? '1fr' : ''}`.trim())
+              .rowsTemplate('auto')
+              .columnsGap(16)
+              .rowsGap(16)
+              .padding({ left: 16, right: 16, top: 8, bottom: 8 })
+              .scrollBar(BarState.Auto)
+              .scrollBarColor(ThemeManager.getPrimaryColor())
+              .scrollBarWidth(4)
+              .edgeEffect(EdgeEffect.Spring)
+              .onScrollIndex((firstIndex: number, lastIndex: number) => {
+                console.info('Grid first index: ' + firstIndex + ', last index: ' + lastIndex)
+                // 滚动到底部时加载更多
+                if (lastIndex >= this.zhiNews.length - 3) {
+                  this.getMoreNews();
+                }
+              })
+            } else {
+              // 小屏列表布局
+              List({ space: 1 }) {
+                ForEach(this.zhiNews, (item: ZhiNewsItem, idx) => {
+                  ListItem() {
+                    this.NewsItem(item, !!item.isShowDivider, idx)
+                  }
+                }, (itm: ZhiNewsItem) => itm.id)
+              }
+              .divider({ strokeWidth: 2, color: ThemeManager.getDividerColor() })
+              .listDirection(Axis.Vertical)
+              .edgeEffect(EdgeEffect.Spring, { alwaysEnabled: true })
+              // 当画面能滚动说明没有触底
+              .onScrollStart(() => {
+                this.isEnd = false
+              })
+              // 判断当前是否停止滚动
+              .onScrollStop(() => {
+                // 如果停止滚动并且满足滚动条已经在底部进行数据的加载
+                if (this.isEnd) {
+                  // 加载数据
+                  this.getMoreNews();
+                }
+              })
+              // 当滚动条触底把 flag 设置成 true
+              .onReachEnd(() => {
+                this.isEnd = true
+                console.log("onReachEnd")
+              })
+            }
           }
           .onStateChange((refreshStatus: RefreshStatus) => {
             console.info('Refresh onStatueChange state is ' + refreshStatus)
